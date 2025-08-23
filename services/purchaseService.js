@@ -118,7 +118,6 @@ exports.handlePaymentSuccess = async (sessionId) => {
   if (session.payment_status === 'paid') {
     const { studentId, packageId } = session.metadata;
     
-    // Create purchase record
     const insertQuery = `
       INSERT INTO purchases (studentId, packageId, status)
       VALUES ($1, $2, 'active')
