@@ -1,6 +1,9 @@
 const purchaseService = require('../services/purchaseService');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+// Track processed webhook events to prevent duplicates
+const processedEvents = new Set();
+
 exports.createPurchase = async (req, res) => {
   try {
     const { packageId } = req.body;
@@ -57,6 +60,16 @@ exports.handleWebhook = async (req, res) => {
 
   console.log('Received webhook event:', event.type);
   console.log('Event data:', JSON.stringify(event.data, null, 2));
+
+  // Check if we've already processed this event
+  const eventId = event.id;
+  if (processedEvents.has(eventId)) {
+    console.log('Event already processed, skipping:', eventId);
+    return res.json({ received: true, message: 'Event already processed' });
+  }
+
+  // Add event to processed set
+  processedEvents.add(eventId);
 
   // Handle the event
   switch (event.type) {
@@ -145,5 +158,21 @@ exports.webhookTest = async (req, res) => {
     method: req.method,
     headers: req.headers
   });
+};
+
+exports.getPurchasesByStudentId = async (req, res) => {
+  try {
+    const studentId = req.user?.id;
+    
+    if (!studentId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const purchases = await purchaseService.getPurchasesByStudentId(studentId);
+    res.json(purchases);
+  } catch (error) {
+    console.error('Error fetching purchases:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 };
 

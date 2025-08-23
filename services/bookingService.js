@@ -35,3 +35,29 @@ exports.createTrialBooking = async (params) => {
   return result.rows[0];
 };
 
+exports.getBookingsByStudentId = async (studentId) => {
+  const query = `
+    SELECT 
+      b.id,
+      b.studentid,
+      b.teacherid,
+      b.scheduledate,
+      b.scheduletime,
+      b.type,
+      b.status,
+      b.createdat,
+      t.name as teacher_name,
+      t.avatar as teacher_avatar,
+      t.specialization as teacher_specialization,
+      t.shortdesc as teacher_short_desc,
+      t.rating as teacher_rating
+    FROM bookings b
+    JOIN teachers t ON b.teacherid = t.id
+    WHERE b.studentid = $1
+    ORDER BY b.scheduledate DESC, b.scheduletime DESC
+  `;
+
+  const result = await pool.query(query, [studentId]);
+  return result.rows;
+};
+

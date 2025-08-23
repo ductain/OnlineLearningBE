@@ -22,3 +22,19 @@ exports.createTrialBooking = async (req, res) => {
   }
 };
 
+exports.getBookingsByStudentId = async (req, res) => {
+  try {
+    const studentId = req.user?.id;
+    
+    if (!studentId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const bookings = await bookingService.getBookingsByStudentId(studentId);
+    res.json(bookings);
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+

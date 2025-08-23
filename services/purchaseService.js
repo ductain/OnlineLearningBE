@@ -84,7 +84,7 @@ exports.createPaymentIntent = async (params) => {
           currency: 'vnd',
           product_data: {
             name: packageData.name,
-            description: `${packageData.totalHours} hours with ${packageData.teachername}`,
+            description: `${packageData.teachername}`,
           },
           unit_amount: Math.round(packageData.price), // Amount in cents
         },
@@ -92,8 +92,8 @@ exports.createPaymentIntent = async (params) => {
       },
     ],
     mode: 'payment',
-    success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${frontendUrl}/payment/cancel`,
+    success_url: `${frontendUrl}/package`,
+    cancel_url: `${frontendUrl}`,
     metadata: {
       studentId: studentId,
       packageId: packageId,
@@ -118,6 +118,17 @@ exports.handlePaymentSuccess = async (sessionId) => {
   if (session.payment_status === 'paid') {
     const { studentId, packageId } = session.metadata;
     
+    // Check if purchase already exists to prevent duplicates
+    const existingPurchase = await pool.query(
+      'SELECT id FROM purchases WHERE studentid = $1 AND packageid = $2 AND status = $3',
+      [studentId, packageId, 'active']
+    );
+    
+    if (existingPurchase.rows.length > 0) {
+      console.log('Purchase already exists, skipping duplicate insertion:', existingPurchase.rows[0].id);
+      return existingPurchase.rows[0];
+    }
+    
     // Create purchase record
     const insertQuery = `
       INSERT INTO purchases (studentid, packageid, status)
@@ -126,9 +137,40 @@ exports.handlePaymentSuccess = async (sessionId) => {
     `;
 
     const result = await pool.query(insertQuery, [studentId, packageId]);
+    console.log('New purchase created:', result.rows[0].id);
     return result.rows[0];
   }
   
   throw new Error('Payment not completed');
+};
+
+exports.getPurchasesByStudentId = async (studentId) => {
+  const query = `
+    SELECT 
+      p.id,
+      p.studentid,
+      p.packageid,
+      p.status,
+      p.startdate,
+      p.enddate,
+      p.createdat,
+      pkg.name as package_name,
+      pkg.totalhours as package_total_hours,
+      pkg.price as package_price,
+      t.id as teacher_id,
+      t.name as teacher_name,
+      t.avatar as teacher_avatar,
+      t.specialization as teacher_specialization,
+      t.shortdesc as teacher_short_desc,
+      t.rating as teacher_rating
+    FROM purchases p
+    JOIN packages pkg ON p.packageid = pkg.id
+    JOIN teachers t ON pkg.teacherid = t.id
+    WHERE p.studentid = $1
+    ORDER BY p.createdat DESC
+  `;
+
+  const result = await pool.query(query, [studentId]);
+  return result.rows;
 };
 

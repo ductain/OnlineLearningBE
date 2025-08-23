@@ -110,5 +110,66 @@ router.get('/test-webhook/:sessionId', purchaseController.testWebhook);
  */
 router.get('/webhook-test', purchaseController.webhookTest);
 
+/**
+ * @swagger
+ * /api/v1/purchases/my-purchases:
+ *   get:
+ *     tags: [Purchase]
+ *     summary: Lấy tất cả gói học đã mua của học viên
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách gói học đã mua
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 purchases:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       studentid:
+ *                         type: integer
+ *                       packageid:
+ *                         type: integer
+ *                       status:
+ *                         type: string
+ *                       startdate:
+ *                         type: string
+ *                         format: date-time
+ *                       enddate:
+ *                         type: string
+ *                         format: date-time
+ *                       createdat:
+ *                         type: string
+ *                         format: date-time
+ *                       package_name:
+ *                         type: string
+ *                       package_total_hours:
+ *                         type: integer
+ *                       package_price:
+ *                         type: number
+ *                       teacher_id:
+ *                         type: integer
+ *                       teacher_name:
+ *                         type: string
+ *                       teacher_avatar:
+ *                         type: string
+ *                       teacher_specialization:
+ *                         type: string
+ *                       teacher_short_desc:
+ *                         type: string
+ *                       teacher_rating:
+ *                         type: number
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/my-purchases', verifyToken, purchaseController.getPurchasesByStudentId);
+
 module.exports = router;
 
