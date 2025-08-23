@@ -49,7 +49,7 @@ const swaggerOptions = {
       version: "1.0.0",
       description: "API documentation for Online Learning",
     },
-    servers: [{ url: "http://localhost:" + config.port }],
+    servers: [{ url: "http://localhost:" + config.port }, {url: "https://online-learning-be.vercel.app"}],
     components: {
       securitySchemes: {
         bearerAuth: {
