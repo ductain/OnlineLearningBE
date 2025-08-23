@@ -27,7 +27,7 @@ exports.createPurchase = async (params) => {
   }
 
   const insertQuery = `
-    INSERT INTO purchases (studentId, packageId, status)
+    INSERT INTO purchases (studentid, packageid, status)
     VALUES ($1, $2, 'active')
     RETURNING *
   `;
@@ -75,7 +75,7 @@ exports.createPaymentIntent = async (params) => {
     throw new Error('FRONTEND_URL must include http:// or https:// scheme');
   }
 
-  // Create Stripe Checkout session
+  // Create Stripe Checkout session (which creates a payment intent internally)
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: [
@@ -95,8 +95,8 @@ exports.createPaymentIntent = async (params) => {
     success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${frontendUrl}/payment/cancel`,
     metadata: {
-      studentId: studentId.toString(),
-      packageId: packageId.toString(),
+      studentId: studentId,
+      packageId: packageId,
       studentName: student.rows[0].name,
       packageName: packageData.name,
       teacherName: packageData.teachername
@@ -118,8 +118,9 @@ exports.handlePaymentSuccess = async (sessionId) => {
   if (session.payment_status === 'paid') {
     const { studentId, packageId } = session.metadata;
     
+    // Create purchase record
     const insertQuery = `
-      INSERT INTO purchases (studentId, packageId, status)
+      INSERT INTO purchases (studentid, packageid, status)
       VALUES ($1, $2, 'active')
       RETURNING *
     `;

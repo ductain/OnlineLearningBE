@@ -22,6 +22,11 @@ app.use(
     methods: "GET,POST,PUT,DELETE",
   })
 );
+
+// Stripe webhook route - must be before express.json() middleware
+const purchaseController = require("./controllers/purchaseController");
+app.post("/api/v1/purchases/webhook", express.raw({ type: 'application/json' }), purchaseController.handleWebhook);
+
 app.use(express.json());
 const config = require("./config/default");
 const swaggerUi = require("swagger-ui-express");

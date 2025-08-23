@@ -100,7 +100,10 @@ console.log('Payment was cancelled');
 
 1. Go to Stripe Dashboard > Developers > Webhooks
 2. Add endpoint: `https://your-domain.com/api/v1/purchases/webhook`
-3. Select events: `checkout.session.completed`, `checkout.session.expired`
+3. Select events: 
+   - `checkout.session.completed` (for Stripe Checkout)
+   - `payment_intent.succeeded` (for direct payment intents)
+   - `payment_intent.payment_failed` (for failed payments)
 4. Copy the webhook secret to your `.env` file
 
 ## Testing
@@ -117,5 +120,5 @@ Use Stripe test cards:
 3. Frontend redirects user to checkout URL
 4. User completes payment on Stripe's hosted page
 5. Stripe redirects to success/cancel URL
-6. Stripe sends webhook to `/api/v1/purchases/webhook` on success
-7. Backend automatically creates purchase record
+6. Stripe sends webhook to `/api/v1/purchases/webhook` with `payment_intent.succeeded` event
+7. Backend automatically creates purchase record in database

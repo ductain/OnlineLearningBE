@@ -82,17 +82,33 @@ router.post('/payment-intent', verifyToken, purchaseController.createPaymentInte
 
 /**
  * @swagger
- * /api/v1/purchases/webhook:
- *   post:
+ * /api/v1/purchases/test-webhook/{sessionId}:
+ *   get:
  *     tags: [Purchase]
- *     summary: Stripe webhook endpoint
+ *     summary: Test webhook processing (for debugging)
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Webhook received
- *       400:
- *         description: Webhook error
+ *         description: Test completed
  */
-router.post('/webhook', express.raw({ type: 'application/json' }), purchaseController.handleWebhook);
+router.get('/test-webhook/:sessionId', purchaseController.testWebhook);
+
+/**
+ * @swagger
+ * /api/v1/purchases/webhook-test:
+ *   get:
+ *     tags: [Purchase]
+ *     summary: Test webhook endpoint accessibility
+ *     responses:
+ *       200:
+ *         description: Webhook endpoint is accessible
+ */
+router.get('/webhook-test', purchaseController.webhookTest);
 
 module.exports = router;
 
